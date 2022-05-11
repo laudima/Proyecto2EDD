@@ -1,4 +1,5 @@
-package edd.modelo.Estructuras;
+package edd.estructuras;
+
 
 import java.util.NoSuchElementException;
 
@@ -77,7 +78,7 @@ public abstract class PushPop<T> {
      * 
      * @return un clon de la estructura.
      */
-    //public abstract PushPop<T> clone() ;
+    public abstract PushPop<T> clone() ;
     
     public abstract String toString() ;
 

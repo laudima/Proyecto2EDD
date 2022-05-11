@@ -1,4 +1,4 @@
-package edd.modelo.Estructuras;
+package edd.estructuras;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Comparator;
@@ -40,6 +40,26 @@ public class ArbolBinarioBusqueda<T extends Comparable<T>> extends ArbolBinario<
         public boolean hasNext(){
             return !pila.isEmpty();
         }
+    }
+
+    /**Ultimo vértice agregado al arbol BST, se inicializa en add*/
+    protected Vertice ultimoAgregado;
+
+    /**
+     * Constructor sin parametros. 
+     */
+    public ArbolBinarioBusqueda(){ 
+        super(); 
+    }
+
+    /**
+     * Construye un arbol BST a partir de una colección. El árbol
+     * BST tiene los mismos elementos que la colección recibida.
+     * 
+     * @param coleccion la colección a partir de la cual creamos el árbol AVL 
+     */
+    public ArbolBinarioBusqueda(Collection<T> coleccion) {
+        super(coleccion);
     }
 
     /**
@@ -192,27 +212,33 @@ public class ArbolBinarioBusqueda<T extends Comparable<T>> extends ArbolBinario<
      * @return
      */
     public Vertice search(Vertice raiz, T contenido){
-    if (raiz==null || raiz.elemento==contenido)
-        return raiz;
-    if (raiz.elemento.compareTo(contenido) < 0)
-       return search(raiz.derecho, contenido);
-    return search(raiz.izquierdo, contenido);
+        if (raiz==null || raiz.elemento==contenido)
+            return raiz;
+        if (raiz.elemento.compareTo(contenido) < 0){
+
+            return search(raiz.derecho, contenido);
+        }else{
+            return search(raiz.izquierdo, contenido);
+        }
     }
 
     /**
      * Función add que funciona al igual que extend
      */
     public void add(T elemento){
-        insert(elemento);
-    }
+        elementos++;
+        Vertice nuevo = nuevoVertice(elemento);
 
-    /**
-     * Función que nos permite hacer la inserción de un elemento T en el árbol
-     * @param elemento
-     */
-    public void insert(T elemento)  { 
-        raiz = insert_Recursive(raiz, elemento); 
-    } 
+        if (raiz == null) { 
+            raiz = nuevo;
+            raiz.padre = null; 
+            ultimoAgregado = raiz;
+            return; 
+        } 
+
+        insert(raiz, nuevo); 
+        ultimoAgregado = nuevo;
+    }
    
     /**
      * Función que permite insertar en el lugar apropiado del árbol un elemento T
@@ -220,17 +246,24 @@ public class ArbolBinarioBusqueda<T extends Comparable<T>> extends ArbolBinario<
      * @param elemento
      * @return
      */
-    protected Vertice insert_Recursive(Vertice raiz, T elemento) { 
-        if (raiz == null) { 
-            raiz = nuevoVertice(elemento); 
-            return raiz; 
-        } 
-        if (elemento.compareTo(raiz.elemento) < 0)
-        raiz.izquierdo = insert_Recursive(raiz.izquierdo, elemento); 
-        else if (elemento.compareTo(raiz.elemento) > 0){
-            raiz.derecho = insert_Recursive(raiz.derecho, elemento); 
+    protected void insert(Vertice actual, Vertice nuevo) { 
+
+        if (nuevo.elemento.compareTo(actual.elemento) < 0){
+            if (actual.izquierdo == null) {
+				actual.izquierdo = nuevo;
+				nuevo.padre = actual;
+				return;
+			}
+            insert(actual.izquierdo,nuevo); 
         }
-        return raiz; 
+        else if (nuevo.elemento.compareTo(actual.elemento) >= 0){
+            if (actual.derecho == null) {
+				actual.derecho = nuevo;
+				nuevo.padre = actual;
+				return;
+			}
+            insert(actual.derecho, nuevo); 
+        }
     } 
 
     /**
@@ -240,57 +273,86 @@ public class ArbolBinarioBusqueda<T extends Comparable<T>> extends ArbolBinario<
      * El cual sera el mínimo de el subárbol derecho del nodo a eliminar.
      */
     public boolean delete(T elemento){
-        if (elemento == null){
+
+		Vertice eliminar = search(raiz,elemento);
+
+        if (eliminar == null){
             return false;
         }else{
-            raiz = deleteRecursive(raiz, elemento);
-            return true;
+            /*Si tiene dos hijos se intercambian los elementos con el vertice minimo 
+            del subarbol derecho*/
+            if(eliminar.hayDerecho() && eliminar.hayIzquierdo()){
+                eliminar = intercambia(eliminar);
+            }
+            deleteRecursive(eliminar);
         }
+
+        elementos--;
+
+        return true;
     }
  
     /**
-     * Función recursiva para eliminar un elemento
+     * Función recursiva para eliminar un vertice con a lo más un hijo. 
+     * Se sube al hijo al lugar del padre. 
+     * Si el vertice es una hoja se actualiza la referencia de su padre a null. 
      * @param raiz
      * @param elemento
      * @return
      */
-    private Vertice deleteRecursive(Vertice raiz, T elemento)
-    {
-        if (raiz == null){
-            return raiz;
+    private void deleteRecursive(Vertice eliminar)
+    {   
+        Vertice hijo = null;
+
+        if(eliminar.hayIzquierdo()){
+            hijo = eliminar.izquierdo;
+        }else if(eliminar.hayDerecho()){
+            hijo = eliminar.derecho;
         }
-        if (elemento.compareTo(raiz.elemento) < 0){
-            raiz.izquierdo = deleteRecursive(raiz.izquierdo, elemento);
-        }else if (elemento.compareTo(raiz.elemento) > 0){
-            raiz.derecho = deleteRecursive(raiz.derecho, elemento);
-        }else{
-            if (raiz.izquierdo == null){
-                return raiz.derecho;
-            }   
-            else if (raiz.derecho == null){
-                return raiz.izquierdo;
+
+        //Verifica que el vertice a eliminar no sea la raiz
+        if(eliminar.padre != null){
+
+            if(eliminar.padre.izquierdo == eliminar){
+                //Se sube al hijo (hijo puede ser null cuando se elimina una hoja)
+                eliminar.padre.izquierdo = hijo;
+            }else{
+                eliminar.padre.derecho = hijo;
             }
-            raiz.elemento = valorMinimo(raiz.derecho);
-            raiz.derecho = deleteRecursive(raiz.derecho, raiz.elemento);
+        }else{
+            raiz = hijo;
         }
- 
-        return raiz;
+
+        if(hijo != null){
+            hijo.padre = eliminar.padre; 
+        }
+
     }
     
+    /**
+     * Método para intercambiar el valor un vertice con el 
+     * minimo de su subárbol derecho.
+     * @param vertice - vertice a intercabiar 
+     * @return Vertice - vertice ya intercambiado
+     */
+    private Vertice intercambia(Vertice vertice){
+        Vertice minv = valorMinimo(vertice.derecho);
+        Vertice aux = vertice; 
+        vertice.elemento = minv.elemento;
+        minv.elemento = aux.elemento;
+        return minv;
+    }
     /**
      * Metodo para encontrar el elemento minimo en el arbol
      * @param raiz
      * @return elemento minimo 
      */
-    private T valorMinimo(Vertice raiz)
+    private Vertice valorMinimo(Vertice raiz)
     {
-        T minv = raiz.elemento;
-        while (raiz.izquierdo != null)
-        {
-            minv = raiz.izquierdo.elemento;
-            raiz = raiz.izquierdo;
+        if(raiz.izquierdo == null){
+            return raiz;
         }
-        return minv;
+        return valorMinimo(raiz.izquierdo);
     }
 
     /**
@@ -303,83 +365,80 @@ public class ArbolBinarioBusqueda<T extends Comparable<T>> extends ArbolBinario<
         for( T i : this){
             elems.add(i);
         }
-        root = buildSorted(elems);
+        raiz = buildSorted(elems);
     }
 
     /**
-     * Regresa una representación en cadena del árbol.
-     *
-     * @return una representación en cadena del árbol.
+     * Al girar a la derecha el vértice, su hijo izquierdo se vuelve su padre 
+     * y el subárbol derecho del que antes era su hijo, se vuelve si subarbol 
+     * izquierdo 
+     * @param vertice el vértice sobre el que vamos a girar.
      */
-    @Override
-    public String toString() {
-        String string = "";
-        for (T i : this) {
-            string += i + " ";
-        }
-        return string + "\n";
+    public void giraDerecha(VerticeArbolBinario<T> vertice) {
+		Vertice v = vertice(vertice);
+		if (v.izquierdo == null) {
+			return;
+		}
+        //hi es hijo izquierdo 
+		Vertice hi = v.izquierdo;
+		if (v.padre == null) {
+			raiz = hi;
+		} else if (v.padre.izquierdo == vertice) {
+			v.padre.izquierdo = hi;
+		} else {
+			v.padre.derecho = hi;
+		}
+        //Se intercambian los padres 
+		hi.padre = v.padre;
+		v.padre = hi;
+		if (hi.derecho != null) {
+			hi.derecho.padre = v;
+		}
+        //Se intercambian los subarboles derechos 
+		v.izquierdo = hi.derecho;
+		hi.derecho = v;
     }
 
     /**
-     * Método auxiliar para dibujar arboles.
-     * @return el numero de espacios necesarios en la String
+     * Al girar a la izquierda un vértice, su hijo derecho se vuleve 
+     * su padre y el subárbol izquierdo del que antes era su hijo, 
+     * se vuelve su subárbol derecho
+     * @param vertice el vértice sobre el que vamos a girar.
      */
-    private String dibujaEspacios(int l, int[] a, int n) {
-        String s = "";
-        for (int i = 0; i < l; i++) {
-            if (a[i] == 1) {
-                s = s + "│  ";
-            } else {
-                s = s + "   ";
-            }
-        }
-        return s;
+    public void giraIzquierda(VerticeArbolBinario<T> vertice) {
+		Vertice v = vertice(vertice);
+		if (v.derecho == null) {
+			return;
+		}
+        // hd es HIjo derecho 
+		Vertice hd = v.derecho;
+		if (v.padre == null) {
+			raiz = hd;
+		} else if (v.padre.izquierdo == vertice) {
+			v.padre.izquierdo = hd;
+		} else {
+			v.padre.derecho = hd;
+		}
+        //Se intercambian los padres 
+		hd.padre = v.padre;
+		v.padre = hd;
+		if (hd.izquierdo != null) {
+			hd.izquierdo.padre = v;
+		}
+        //Se intercambian los subarboles izquierdos 
+		v.derecho = hd.izquierdo;
+		hd.izquierdo = v;
     }
 
-    /**
-     * Metodo auxiliar de toString para dibujar arboles
-     * @return una representacion en String de nuestro arbol.
-     */
-    private String toStringArboles(Vertice v, int l, int[] m) {
-        String s = v.toString() + "\n";
-        m[l] = 1;
+    //Regresa el toString en DFS
 
-        if (v.izquierdo != null && v.derecho != null) {
-            s = s + dibujaEspacios(l, m, m.length);
-            s = s + "├─›";
-            s = s + toStringArboles(v.izquierdo, l + 1, m);
-            s = s + dibujaEspacios(l, m, m.length);
-            s = s + "└─»";
-            m[l] = 0;
-            s = s + toStringArboles(v.derecho, l + 1, m);
-        } else if (v.izquierdo != null) {
-            s = s + dibujaEspacios(l, m, m.length);
-            s = s + "└─›";
-            m[l] = 0;
-            s = s + toStringArboles(v.izquierdo, l + 1, m);
-        } else if (v.derecho != null) {
-            s = s + dibujaEspacios(l, m, m.length);
-            s = s + "└─»";
-            m[l] = 0;
-            s = s + toStringArboles(v.derecho, l + 1, m);
-        }
-        return s;
-    }
-
-    /**
-     * Regresa una representación en cadena del arbol.
-     * @return una representación en cadena del arbol.
-     */
-    public String toStringArboles() {
-        if (this.raiz == null) {
-            return "";
-        }
-        int[] a = new int[this.altura() + 1];
-        for (int i = 0; i < a.length; i++) {
-            a[i] = 0;
-        }
-        return toStringArboles(this.raiz, 0, a);
-    }
+    // @Override public String toString(){
+    //     String s=""; 
+    //     for(T elemento: this){
+    //         s += elemento;
+    //     }
+    //     return s + "\n";
+    // }
 
     /**
      * Regresa un iterador para iterar el árbol. El árbol se itera en orden.

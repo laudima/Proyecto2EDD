@@ -1,4 +1,4 @@
-package edd.modelo.Estructuras;
+package edd.estructuras;
 
 import java.util.NoSuchElementException;
 /**

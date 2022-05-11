@@ -1,6 +1,9 @@
-package edd.modelo.Estructuras;
+package edd.estructuras;
+
 
 import java.util.NoSuchElementException;
+// import java.util.Comparator;
+
 /**
  * <p>
  * Clase abstracta para árboles binarios genéricos.
@@ -189,10 +192,17 @@ public abstract class ArbolBinario<T> implements Collection<T> {
             return false;
         }
 
+        /**
+         * Regresa una representación en cadena del vértice.
+         * @return una representación en cadena del vértice.
+         */
+        public String toString() {
+			return elemento.toString();
+        }
     }
 
     /** La raíz del árbol. */
-    protected Vertice raiz;
+    public  Vertice raiz;
     /** El contador del número de elementos */
     protected int elementos;
 
@@ -312,70 +322,61 @@ public abstract class ArbolBinario<T> implements Collection<T> {
     }
     
 
-    /**
-     * Método auxiliar de toString
-     * 
-     * @return espacios
-     */
-    private String dibujaEspacios(int l, int[] a, int n) {
-        String s = "";
-        for (int i = 0; i < l; i++) {
-            if (a[i] == 1) {
-                s = s + "│  ";
-            } else {
-                s = s + "   ";
-            }
-        }
-        return s;
-    }
 
-    /**
-     * Metodo auxiliar de toString
-     *
-     */
-
-    private String toString(Vertice v, int l, int[] m) {
-        String s = v.toString() + "\n";
-        m[l] = 1;
-
-        if (v.izquierdo != null && v.derecho != null) {
-            s = s + dibujaEspacios(l, m, m.length);
-            s = s + "├─›";
-            s = s + toString(v.izquierdo, l + 1, m);
-            s = s + dibujaEspacios(l, m, m.length);
-            s = s + "└─»";
-            m[l] = 0;
-            s = s + toString(v.derecho, l + 1, m);
-        } else if (v.izquierdo != null) {
-            s = s + dibujaEspacios(l, m, m.length);
-            s = s + "└─›";
-            m[l] = 0;
-            s = s + toString(v.izquierdo, l + 1, m);
-        } else if (v.derecho != null) {
-            s = s + dibujaEspacios(l, m, m.length);
-            s = s + "└─»";
-            m[l] = 0;
-            s = s + toString(v.derecho, l + 1, m);
-        }
-        return s;
-    }
-    
     /**
      * Regresa una representación en cadena del árbol.
-     * 
      * @return una representación en cadena del árbol.
      */
-    @Override
-    public String toString() {
-        if (this.raiz == null) {
-            return "";
-        }
-        int[] a = new int[this.altura() + 1];
-        for (int i = 0; i < a.length; i++) {
-            a[i] = 0;
-        }
-        return toString(this.raiz, 0, a);
+    @Override public String toString() {
+		if (raiz == null) {
+			return "";
+		}
+		int[] a = new int[altura() + 1];
+		for (int i = 0; i == altura() + 1; i++) {
+			a[i] = 0;
+		}
+		return toString(raiz, 0, a);
     }
+
+	//Algoritmo recursivo para crear la cadena que representa
+	//la línea de vértices
+	private String toString(Vertice v, int l, int[] a) {
+		String s = v.toString() + "\n";
+		a[l] = 1;
+		if (v.izquierdo != null && v.derecho != null) {
+			s = s + dibujaEspacios(l, a);
+			s = s + "├─›";
+			s = s + toString(v.izquierdo, l + 1, a);
+			s = s + dibujaEspacios(l, a);
+			s = s + "└─»";
+			a[l] = 0;
+			s = s + toString(v.derecho, l + 1, a);
+		} else if (v.izquierdo != null) {
+			s = s + dibujaEspacios(l, a);
+			s = s + "└─›";
+			a[l] = 0;
+			s = s + toString(v.izquierdo, l + 1, a);
+		} else if (v.derecho != null) {
+			s = s + dibujaEspacios(l, a);
+			s = s + "└─»";
+			a[l] = 0;
+			s = s + toString(v.derecho, l + 1, a);
+		}
+		return s;
+	}
+
+	//Algoritmo auxiliar para crear la cadena precedente a un vértice
+	private String dibujaEspacios(int l, int[] a) {
+		String s = "";
+		for (int i = 0; i < l; i++) {
+			if (a[i] == 1) {
+				s = s + "│  ";
+			} else {
+				s = s + "   ";
+			}
+		}
+		return s;
+	}
 
     /**
      * Compara el árbol con un objeto.
@@ -411,19 +412,5 @@ public abstract class ArbolBinario<T> implements Collection<T> {
     protected Vertice vertice(VerticeArbolBinario<T> vertice) {
         return (Vertice) vertice;
     }
-
-
-    
-
-
-
-    
-
-
-
-
-   
-
-
 
 }
